@@ -94,6 +94,7 @@
 (defun final-absolute-accidental-xoffset (note)
   (+ (final-absolute-element-xoffset (cluster note)) (final-relative-accidental-xoffset note)))
 
+;; TODO: Is final-relative-dot-xoffset a function?  It might need to be added to measure.lisp.
 (defun final-absolute-dot-xoffset (cluster)
   (+ (final-absolute-element-xoffset cluster) (score-pane:staff-step (final-relative-dot-xoffset cluster))))
 
@@ -936,6 +937,7 @@ right of the center of its timeline"))
 
 (defgeneric draw-element (pane element &optional flags))
 
+;; TODO: style warning about FLAGS
 (defmethod draw-element :around (pane element &optional flags)
   (call-next-method)
   (dolist (annotation (annotations element))
@@ -948,6 +950,7 @@ right of the center of its timeline"))
 ;;; FIXME: these methods work and have the right vertical behaviour;
 ;;; the horizontal centering of the dot and the tenuto mark are all
 ;;; wrong, sadly.
+;; TODO: warning about DDY not being defined, probably tied to the comments above.
 (defmethod draw-element-annotation
     (pane (element cluster) (annotation (eql :staccato)))
   (let ((direction (final-stem-direction element))
@@ -968,6 +971,7 @@ right of the center of its timeline"))
                   (setq pos (1+ pos)))
                 (score-pane:draw-dot pane (+ x (/ (+ dx ddx) 2)) pos))))))))
 
+;; TODO: warning about DDY not being defined, probably tied to the comments above.
 (defmethod draw-element-annotation
     (pane (element cluster) (annotation (eql :tenuto)))
   (let ((direction (final-stem-direction element))
@@ -1018,12 +1022,13 @@ right of the center of its timeline"))
             (declare (ignore down))
             (score-pane:draw-flags-up pane nb (+ x left) pos))))))
 
+;; TODO: variable X is not used... gotta look into this more.
 (defun draw-dots (pane nb-dots x dot-xoffset dot-pos)
   (when dot-pos
     (let ((staff-step (score-pane:staff-step 1)))
       (loop repeat nb-dots
             for xx from dot-xoffset by staff-step do
-            (score-pane:draw-dot pane xx dot-pos)))))
+              (score-pane:draw-dot pane xx dot-pos)))))
 
 (defun draw-note (pane note notehead nb-dots x pos dot-xoffset dot-pos)
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff note)))
@@ -1036,7 +1041,7 @@ right of the center of its timeline"))
 (defun draw-notes (pane notes dots notehead dot-xoffset)
   (loop for note in notes
      do
-       (with-drawing-options (pane :ink (if (and (gsharp::cur-notep)
+       (with-drawing-options (pane :ink (if (and (gsharp::cur-notep) ; defined in gui.lisp
                                                  (eq note (gsharp::cur-note))
                                                  (not (typep pane 'clim-postscript::postscript-stream)))
                                             *main-selected-note-colour* +black+))

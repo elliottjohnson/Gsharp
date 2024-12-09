@@ -4,6 +4,7 @@
   :description "Editor for music scores in traditional notation."
   :author "Robert Strandh <robert.strandh@gmail.com>"
   :depends-on (:mcclim
+	       :mcclim-bezier
                :clim-listener
                :stealth-mixin
                :acclimation
@@ -11,7 +12,8 @@
                :midi
                :puri
                :cxml
-               :obseq)
+               :obseq
+	       :cl-fad)
   :serial t
   :components
   ((:file "packages")

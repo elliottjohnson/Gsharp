@@ -42,7 +42,7 @@
       (setf (slot-value button 'icon)
             (make-pattern-from-bitmap-file
              (icon-path button)
-             :format :xpm :port nil))))
+             :format :xpm)))) ; removed ":port nil"
   (slot-value button 'icon))
 (defclass icon-push-button-pane (icon-push-button push-button-pane)
   ())
@@ -145,7 +145,7 @@
 
 (defun read-text-path (gadget)
   (let ((new-path (pathname (gadget-value gadget))))
-    (if (clim-listener::directoryp new-path)
+    (if (cl-fad:directory-pathname-p new-path)
         (setf (current-path *application-frame*)
               new-path)
         (setf (current-path *application-frame*)
@@ -204,11 +204,26 @@
                         (find-pane-named frame 'path-input)
                         :force-p t))
 
+;; TODO: do away with these two resurrected functions used to display-folder.
+(defun show-directory-pathnames (pathname)
+  "Convert the pathname entered by the user into a query pathname
+ (the pathname which will be passed to cl:directory, potentially a
+ wild pathname), and a base pathname (which directory entries may
+ be printed relative to in the fashion of enough-namestring)."
+  (values (if (wild-pathname-p pathname)
+              pathname
+              (gen-wild-pathname pathname))
+          (clim-listener::strip-filespec pathname)))
+
+(defun gen-wild-pathname (pathname)
+  "Build a pathname with appropriate :wild components for the directory listing."
+  (merge-pathnames pathname (make-pathname :name :wild :type :wild :version :wild)))
+
 (defmethod display-folder (frame pane)
   (let* ((main-path (current-path frame))
-         (path (if (clim-listener::directoryp main-path)
-                   (clim-listener::show-directory-pathnames main-path)
-                   (clim-listener::show-directory-pathnames (directory-name main-path)))))
+         (path (if (cl-fad:directory-pathname-p main-path)
+                   (show-directory-pathnames main-path)
+                   (show-directory-pathnames (directory-name main-path)))))
     (browser-show-directory
      pane
      ;;   (clim-listener::show-directory-pathnames (current-path frame))
@@ -225,7 +240,7 @@
     (make-pathname :directory (subseq dirs 0 (1- (length dirs))))))
 
 (defun hiddenp (path)
-  (char= (elt (if (clim-listener::directoryp path)
+  (char= (elt (if (cl-fad:directory-pathname-p path)
                   (directory-name path)
                   (pathname-name path))
               0)
@@ -235,8 +250,8 @@
   (car (last (pathname-directory path))))
 
 (defun directory-alpha-sort (p1 p2)
-  (let ((d1 (clim-listener::directoryp p1))
-        (d2 (clim-listener::directoryp p2)))
+  (let ((d1 (cl-fad:directory-pathname-p p1))
+        (d2 (cl-fad:directory-pathname-p p2)))
     (if d1
         (if d2
             (string-lessp (directory-name p1) (directory-name p2))
@@ -278,7 +293,7 @@
                       (princ "Parent directory" pane))
                     (with-drawing-options
                         (pane :ink
-                              (if (or (clim-listener::directoryp (aref dir (+ (* 3 i) j -1)))
+                              (if (or (cl-fad:directory-pathname-p (aref dir (+ (* 3 i) j -1)))
                                       (file-filter (aref dir (+ (* 3 i) j -1))
                                                    *application-frame*))
                                   +black+
@@ -315,7 +330,7 @@
                              :gesture :adjust
                              :documentation "select file"
                              :tester ((object)
-                                      (not (clim-listener::directoryp object))))
+                                      (not (cl-fad:directory-pathname-p object))))
     (object)
   (list object))
 
@@ -341,7 +356,7 @@
 (define-presentation-to-command-translator change-to-directory
     (clim-listener::pathname com-change-to-directory file-browser
                    :documentation  "change-to-directory"
-                   :tester ((object) (clim-listener::directoryp object)))
+                   :tester ((object) (cl-fad:directory-pathname-p object)))
     (object)
   (list object))
 
@@ -365,7 +380,7 @@
 (defun gui-get-pathname (&key initial-path extensions)
   ;; Clunky way of getting default values into gadgets.
   (unless initial-path
-    (setf initial-path (directory-of-current-buffer)))
+    (setf initial-path (directory-of-current-buffer))) ; defined in commands.lisp
   (let* ((filespec (make-filespec :pathname ""))
          (frame (make-application-frame-with-gadgets
                  'file-browser

@@ -46,6 +46,7 @@
   (with-slots (x y) record
     (values x y)))
 
+;; TODO: there is a warning here, look into re-defining SETF's for methods. 
 (defmethod (setf output-record-position)
     (new-x new-y (record score-output-record))
   (with-slots (x y) record
@@ -54,6 +55,7 @@
 (defmethod output-record-start-cursor-position ((record score-output-record))
   (values nil nil))
 
+;; TODO: there is a warning here, look into re-defining SETF's for methods. 
 (defmethod (setf output-record-start-cursor-position)
     (x y (record score-output-record))
   (declare (ignore x y))
@@ -62,6 +64,7 @@
 (defmethod output-record-end-cursor-position ((record score-output-record))
   (values nil nil))
 
+;; TODO: there is a warning here, look into re-defining SETF's for methods. 
 (defmethod (setf output-record-end-cursor-position)
     (x y (record score-output-record))
   (declare (ignore x y))
@@ -76,13 +79,14 @@
   t)
 
 ;;; remove this when McCLIM is fixed
+;; TODO test if McCLIM is fixed :)
 (defmethod region-intersects-region-p (region (record score-output-record))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (region-intersects-region-p region (make-rectangle* x1 y1 x2 y2))))
 
 ;;;;;;;;;;;;;;;;;; pixmap drawing
-
-(climi::def-grecording draw-pixmap (() pixmap pm-x pm-y) ()
+;; TODO figure out what MEDIUM is all about here.
+(climi::def-grecording draw-pixmap () (pixmap pm-x pm-y)  
   (climi::with-transformed-position ((medium-transformation medium) pm-x pm-y)
     (setf (slot-value climi::graphic 'pm-x) pm-x
           (slot-value climi::graphic 'pm-y) pm-y)
@@ -116,11 +120,35 @@
        (climi::if-supplied (pm-y coordinate)
          (climi::coordinate= (slot-value climi::record 'pm-y) pm-y))))
 
+;;;; TODO: see what happened to the with-medium-options.  It was removed from commit:
+;;;;   626e96acea9d6ae332058c9937b7a86a9047c1ff  that removed it and DO-GRAPHIC-WITH-OPTIONS
+;;;; I'm adding back the supporting code, since it appears that it _should_ still work
+
+;;; The generic function DO-GRAPHICS-WITH-OPTIONS is internal to the
+;;; CLIM-INTERNALS package.  It is used in the expansion of the macro
+;;; WITH-MEDIUM-OPTIONS.
+(defgeneric do-graphics-with-options (medium function &rest options)
+  (:method (medium func &rest options)
+    (declare (ignore options))
+    (climi::maybe-funcall func medium))
+  (:method ((medium medium) func &rest options)
+    (let ((climi::*foreground-ink* (climi::medium-foreground medium))
+          (climi::*background-ink* (climi::medium-background medium)))
+      (apply #'climi::do-graphics-with-options-internal medium medium func options))))
+
+(defmacro with-medium-options ((medium args) &body body)
+  `(flet ((graphics-op (medium)
+            (declare (ignorable medium))
+            ,@body))
+     (declare (dynamic-extent #'graphics-op))
+     (apply #'do-graphics-with-options ,medium #'graphics-op ,args)))
+
 (defun draw-pixmap* (sheet pixmap x y
-                           &rest args
-                           &key clipping-region transformation)
+                     &rest args
+                     &key clipping-region transformation)
   (declare (ignore clipping-region transformation))
-  (climi::with-medium-options (sheet args)
+
+  (with-medium-options (sheet args)
     (medium-draw-pixmap* medium pixmap x y)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

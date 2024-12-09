@@ -126,7 +126,7 @@
 (define-command-table lyrics-table
     :inherit-from (rhythmic-table))
 
-(set-key (lambda () (erase-char (cur-element))) 'lyrics-table '((#\h :control)))
+(set-key (lambda () (erase-char (cur-element))) 'lyrics-table '((#\h :control))) ; cur-element defined in gui.lisp
 (set-key `(com-erase-element *numeric-argument-marker*) 'lyrics-table '((#\h :meta)))
 (set-key 'insert-lyrics-element 'lyrics-table '((#\Space :control)))
 

@@ -275,7 +275,7 @@ of a normal note.  This function always returns a positive value"))
 (defgeneric slant (thing slant))
 
 (defmethod slant ((region clim:region) slant)
-  (let ((tr (climi::make-slanting-transformation slant)))
+  (let ((tr (climi::make-slanting-transformation slant))) ;; TODO: can't find.
     (clim:transform-region tr region)))
 
 (defgeneric compute-design (font shape))
@@ -305,7 +305,7 @@ of a normal note.  This function always returns a positive value"))
   (let* ((key (list direction position width)))
     (or (gethash key *beam-designs*)
         (setf (gethash key *beam-designs*)
-              (climi::close-path
+              (mcclim-bezier::close-path
                (if (eq direction :down)
                    (if (eq position :upper)
                        (mf #c(0 0) -- (complex width 1) -- (complex 0 1) -- #c(0 0))
@@ -552,20 +552,20 @@ of a normal note.  This function always returns a positive value"))
                     (c xk yk) down ++ (c xh (- yh staff-line-thickness)) ++
                     (c xl yl) & (c xl yl) ++ down (c xi 0)))
              (q (yscale p -1))
-             (r (climi::close-path
+             (r (mcclim-bezier::close-path
                  (reduce #'clim:region-union
                          (list p
-                               (climi::reverse-path q)
+                               (mcclim-bezier::reverse-path q)
                                (mf (c xc (- ystart)) -- (c xc ystart)))))))
         (translate
          (clim:region-union
-          (climi::close-path (mf (c 0 top) -- (c xa top) --
-                                 (c xa (- top)) --
-                                 (c 0 (- top)) -- (c 0 top)))
+          (mcclim-bezier::close-path (mf (c 0 top) -- (c xa top) --
+					 (c xa (- top)) --
+					 (c 0 (- top)) -- (c 0 top)))
           (clim:region-union
-           (climi::close-path (mf (c xb top) -- (c xc top) --
-                                  (c xc (- top)) --
-                                  (c xb (- top)) -- (c xb top)))
+           (mcclim-bezier::close-path (mf (c xb top) -- (c xc top) --
+					  (c xc (- top)) --
+					  (c xb (- top)) -- (c xb top)))
            r))
          (c 0 yoffset))))))
 
@@ -686,7 +686,7 @@ of a normal note.  This function always returns a positive value"))
                                    #c(-0.3 0.0) #c(0.0 -0.32) 0.8)
                             -0.3)
                      sld)))
-      (translate (clim:region-difference op (climi::reverse-path ip))
+      (translate (clim:region-difference op (mcclim-bezier::reverse-path ip))
                  (complex xoffset yoffset)))))
 
 (defmethod compute-design ((font font) (shape (eql :half-notehead)))
@@ -857,7 +857,7 @@ of a normal note.  This function always returns a positive value"))
          (top (round (* 11/6 sld)))
          (width (* width-multiplier sld)))
     (flet ((c (x y) (complex x y)))
-      (climi::close-path
+      (mcclim-bezier::close-path
        (mf (c 0.0 top) left ++
            (c (- width) (- top height)) --
            (c (- (- width 1.0)) (- top height)) ++
@@ -872,7 +872,7 @@ of a normal note.  This function always returns a positive value"))
          (top (round (* 11/6 sld)))
          (width (* width-multiplier sld)))
     (flet ((c (x y) (complex x y)))
-      (climi::close-path
+      (mcclim-bezier::close-path
        (mf (c 0.0 top) right ++
            (c width (- top height)) --
            (c (- width 1.0) (- top height)) ++
@@ -949,7 +949,7 @@ of a normal note.  This function always returns a positive value"))
          (bot (- (round(* 11/6 sld)) slt))
          (width (* width-multiplier sld)))
     (flet ((c (x y) (complex x y)))
-      (climi::close-path
+      (mcclim-bezier::close-path
        (mf (c 0.0 (- bot)) left ++
            (c (- width) (- height bot)) --
            (c (- (- width 1.0)) (- height bot)) ++
@@ -963,7 +963,7 @@ of a normal note.  This function always returns a positive value"))
          (bot (- (round(* 11/6 sld)) slt))
          (width (* width-multiplier sld)))
     (flet ((c (x y) (complex x y)))
-      (climi::close-path
+      (mcclim-bezier::close-path
        (mf (c 0.0 (- bot)) right ++
            (c width (- height bot)) --
            (c (- width 1.0) (- height bot)) ++
@@ -1179,11 +1179,11 @@ of a normal note.  This function always returns a positive value"))
   (with-slots ((sld staff-line-distance) xoffset yoffset) font
     (flet ((c (x y) (complex x y)))
       (let* ((offset (ceiling (* 0.1 sld)))
-             (leg (climi::close-path (mf (c 0 0) -- (c offset 0) (direction #c(1 1)) ++
-                                         right (c (* 0.5 sld) offset) --
-                                         (* 0.55 sld (c 1 1)) --
-                                         (c offset (* 0.5 sld)) down ++
-                                         (direction #c(-1 -1)) (c 0 offset) -- (c 0 0)))))
+             (leg (mcclim-bezier::close-path (mf (c 0 0) -- (c offset 0) (direction #c(1 1)) ++
+						 right (c (* 0.5 sld) offset) --
+						 (* 0.55 sld (c 1 1)) --
+						 (c offset (* 0.5 sld)) down ++
+						 (direction #c(-1 -1)) (c 0 offset) -- (c 0 0)))))
         (reduce #'clim:region-union
                 (list (translate leg (c xoffset yoffset))
                       (translate (rotate leg (* pi 0.5)) (c xoffset yoffset))
@@ -1201,11 +1201,11 @@ of a normal note.  This function always returns a positive value"))
              ;; way to share code between the glyphs.
              (inner (xyscale (translate (rotate +half-circle+ pi) #c(-0.6 0))
                              (* 0.75 sld) (* (/ 0.75 1.2) sld)))
-             (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
-             (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
-             (combined (climi::close-path
+             (middle (mf (mcclim-bezier::path-end outer) -- (mcclim-bezier::path-end inner)))
+             (finish (mf (mcclim-bezier::path-start inner) -- (mcclim-bezier::path-start outer)))
+             (combined (mcclim-bezier::close-path
                         (reduce #'clim:region-union
-                                (list outer middle (climi::reverse-path inner) finish)))))
+                                (list outer middle (mcclim-bezier::reverse-path inner) finish)))))
         (clim:region-union (translate (rotate (slant combined 0.6) (- (/ pi 2)))
                                       (c (round (- (* -0.2 sld) stem-thickness)) (* -0.5 sld)))
                            (with-pen (scale +razor+ stem-thickness)
@@ -1222,11 +1222,11 @@ of a normal note.  This function always returns a positive value"))
                              sld (* 1.2 sld)))
              (inner (scale (translate +half-circle+ #c(-0.6 0))
                            (* 0.75 sld)))
-             (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
-             (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
-             (combined (climi::close-path
+             (middle (mf (mcclim-bezier::path-end outer) -- (mcclim-bezier::path-end inner)))
+             (finish (mf (mcclim-bezier::path-start inner) -- (mcclim-bezier::path-start outer)))
+             (combined (mcclim-bezier::close-path
                         (reduce #'clim:region-union
-                                (list outer middle (climi::reverse-path inner) finish)))))
+                                (list outer middle (mcclim-bezier::reverse-path inner) finish)))))
         (clim:region-union (translate (rotate (slant combined -0.6) (- (/ pi 2)))
                                       (c (round (* -0.2 sld)) (* -0.5 sld)))
                            (with-pen (scale +razor+ stem-thickness)
@@ -1243,20 +1243,20 @@ of a normal note.  This function always returns a positive value"))
                              (* 1 sld) (* 1 sld)))
              (inner (xyscale (translate (rotate +half-circle+ pi) #c(-0.6 0))
                              (* 0.75 sld) (* (/ 0.75 1.2) sld)))
-             (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
-             (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
-             (combined (climi::close-path
+             (middle (mf (mcclim-bezier::path-end outer) -- (mcclim-bezier::path-end inner)))
+             (finish (mf (mcclim-bezier::path-start inner) -- (mcclim-bezier::path-start outer)))
+             (combined (mcclim-bezier::close-path
                         (reduce #'clim:region-union
-                                (list outer middle (climi::reverse-path inner) finish))))
+                                (list outer middle (mcclim-bezier::reverse-path inner) finish))))
              (outer1 (xyscale (translate +half-circle+ #c(-0.5 0))
                              sld (* 1.2 sld)))
              (inner1 (scale (translate +half-circle+ #c(-0.6 0))
                            (* 0.75 sld)))
-             (middle1 (mf (climi::path-end outer1) -- (climi::path-end inner1)))
-             (finish1 (mf (climi::path-start inner1) -- (climi::path-start outer1)))
-             (combined1 (climi::close-path
+             (middle1 (mf (mcclim-bezier::path-end outer1) -- (mcclim-bezier::path-end inner1)))
+             (finish1 (mf (mcclim-bezier::path-start inner1) -- (mcclim-bezier::path-start outer1)))
+             (combined1 (mcclim-bezier::close-path
                          (reduce #'clim:region-union
-                                 (list outer1 middle1 (climi::reverse-path inner1) finish1)))))
+                                 (list outer1 middle1 (mcclim-bezier::reverse-path inner1) finish1)))))
         (clim:region-union (clim:region-union (translate (rotate (slant combined (* 0.6 1.2)) (- (/ pi 2)))
                                                          (c (round (- (* -0.2 sld) stem-thickness)) (* -0.5 sld)))
                                               (translate (rotate (slant combined1 -0.6) (- (/ pi 2)))
@@ -1275,11 +1275,11 @@ of a normal note.  This function always returns a positive value"))
                            sld (* 1.2 sld)))
              (inner (scale (translate +half-circle+ #c(-0.6 0))
                            (* 0.8 sld)))
-             (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
-             (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
-             (combined (climi::close-path
+             (middle (mf (mcclim-bezier::path-end outer) -- (mcclim-bezier::path-end inner)))
+             (finish (mf (mcclim-bezier::path-start inner) -- (mcclim-bezier::path-start outer)))
+             (combined (mcclim-bezier::close-path
                         (reduce #'clim:region-union
-                                (list outer middle (climi::reverse-path inner) finish)))))
+                                (list outer middle (mcclim-bezier::reverse-path inner) finish)))))
         (clim:region-union
          (clim:region-union (translate (rotate (slant combined -0.6) (- (/ pi 2)))
                                        (c (round (* -0.2 sld)) (* -0.5 sld)))
@@ -1451,25 +1451,25 @@ of a normal note.  This function always returns a positive value"))
 
 (defun first-flag (sld st extreme-point)
   (flet ((c (x y) (complex x y)))
-    (climi::close-path (mf (c 0 0) ++
-                           (c (* 0.2 sld) (* -0.8 sld)) ++
-                           (c (round (* 0.88 sld)) (* -2.5 sld)) down ++
-                           extreme-point &
-                           extreme-point ++
-                           (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
-                           (c 0 (* -1.3 sld)) &
-                           (c 0 (* -1.3 sld)) -- (c 0 0)))))
+    (mcclim-bezier::close-path (mf (c 0 0) ++
+				   (c (* 0.2 sld) (* -0.8 sld)) ++
+				   (c (round (* 0.88 sld)) (* -2.5 sld)) down ++
+				   extreme-point &
+				   extreme-point ++
+				   (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
+				   (c 0 (* -1.3 sld)) &
+				   (c 0 (* -1.3 sld)) -- (c 0 0)))))
 
 (defun second-flag (sld st extreme-point)
   (flet ((c (x y) (complex x y)))
-    (climi::close-path (mf (c 0 (* -1.4 sld)) (direction #c(1 -2)) ++
-                           (c (round (* 0.88 sld)) (* -2.6 sld)) down ++
-                           extreme-point &
-                           extreme-point ++
-                           (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
-                           (direction #c(-1 2)) (c 0 (* (- -1.3 0.625) sld)) &
-                           (c 0 (* (- -1.3 0.625) sld)) --
-                           (c 0 (* -1.4 sld))))))
+    (mcclim-bezier::close-path (mf (c 0 (* -1.4 sld)) (direction #c(1 -2)) ++
+				   (c (round (* 0.88 sld)) (* -2.6 sld)) down ++
+				   extreme-point &
+				   extreme-point ++
+				   (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
+				   (direction #c(-1 2)) (c 0 (* (- -1.3 0.625) sld)) &
+				   (c 0 (* (- -1.3 0.625) sld)) --
+				   (c 0 (* -1.4 sld))))))
 
 (defmethod compute-design ((font font) (shape (eql :flags-down-1)))
   (with-slots ((sld staff-line-distance) stem-thickness) font
@@ -1592,19 +1592,19 @@ of a normal note.  This function always returns a positive value"))
                                xoffset))))))
 
 (defmethod compute-design ((font font) (shape (eql :beam-down-upper)))
-  (climi::close-path
+  (mcclim-bezier::close-path
    (mf #c(0 0) -- (complex 16 -1) -- (complex 0 -1) -- #c(0 0))))
 
 (defmethod compute-design ((font font) (shape (eql :beam-down-lower)))
-  (climi::close-path
+  (mcclim-bezier::close-path
    (mf #c(0 0) -- (complex 16 0) -- (complex 16 -1) -- #c(0 0))))
 
 (defmethod compute-design ((font font) (shape (eql :beam-up-upper)))
-  (climi::close-path
+  (mcclim-bezier::close-path
    (mf #c(0 0) -- (complex 16 1) -- (complex 16 0) -- #c(0 0))))
 
 (defmethod compute-design ((font font) (shape (eql :beam-up-lower)))
-  (climi::close-path
+  (mcclim-bezier::close-path
    (mf #c(0 0) -- (complex 16 0) -- (complex 0 -1) -- #c(0 0))))
 
 ;;;           w3

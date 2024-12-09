@@ -237,25 +237,25 @@
     (setf bar b)))
 
 (defun sort-staffwise-elements (staff)
-  (setf (staffwise-elements staff)
+  (setf (staffwise-elements staff) ; staffwise-elements is defined in melody.lisp
         (sort (staffwise-elements staff)
-              (lambda (x y) (gsharp::starts-before-p x (bar y) y)))))
+              (lambda (x y) (gsharp::starts-before-p x (bar y) y))))) ; starts-before-p is defined in gui.lisp
 
 ;;; Fix this and move it to melody.lisp.
 (defun maybe-update-key-signatures (bar)
-  (let* ((layer (layer (slice bar)))
-         (staves (staves layer)))
+  (let* ((layer (layer (slice bar))) ; layer is defined in cursor.lisp
+         (staves (staves layer))) ; staves is defined below
     (dolist (staff staves)
       ;; FIXME: this isn't the Right Thing: instead we should be using
       ;; something like maybe-update-key-signatures-using-staff.
-      (when (typep staff 'fiveline-staff)
-        (let ((key-signatures (key-signatures staff)))
+      (when (typep staff 'fiveline-staff) ; fiveline-staff is defined in score-pane.lisp
+        (let ((key-signatures (key-signatures staff))) ; key-signatures is defined in melody.lisp
           (when (and key-signatures
-                     (find (gsharp-numbering:number bar) key-signatures
+                     (find (gsharp-numbering:number bar) key-signatures ; gsharp-numbering defined in numbering.lisp
                            :key (lambda (x) (gsharp-numbering:number (bar x)))))
             ;; We actually only need to invalidate everything in the
             ;; current bar using the staff, not the entire staff.
-            (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff)
+            (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff) ; defined in measure.lisp
             ;; There might be more than one key signature in the bar,
             ;; and they might have changed their relative order as a
             ;; result of the edit.
@@ -586,7 +586,7 @@
 
 (defclass buffer (gsharp-object esa-buffer-mixin drei:undo-mixin)
   ((segments :initform '() :initarg :segments :accessor segments)
-   (staves :initform (list (make-fiveline-staff))
+   (staves :initform (list (make-fiveline-staff)) ; defined in melody.lisp
            :initarg :staves :accessor staves)
    (rastral-size :initform 6 :initarg :r-size :accessor rastral-size)
    (zoom-level :initform 1 :initarg :zoom :accessor zoom-level)
@@ -605,10 +605,14 @@
 (defmethod left-offset ((buffer buffer))
   (* (rastral-size buffer) 4))
 
+;; TODO: this function does not appear to be called anywhere and involves BUFFER-BACK-SELECTION,
+;;  which is undefined and I do not see it defined historically.
 (defun buffer-selection (buffer)
   (when (buffer-back-selection buffer)
     (car (buffer-back-selection buffer))))
 
+;; TODO: this function does not appear to be called anywhere and involves BUFFER-BACK-SELECTION,
+;;  which is undefined and I do not see it defined historically.
 (defun selection-browse-backward (buffer)
   (when (buffer-back-selection buffer)
     (push (car (buffer-back-selection buffer))
@@ -616,6 +620,8 @@
     (setf (buffer-back-selection buffer)
           (cdr (buffer-back-selection buffer)))))
 
+;; TODO: this function does not appear to be called anywhere and involves BUFFER-FORWARD-SELECTION,
+;;  which is undefined and I do not see it defined historically.
 (defun selection-browse-forward (buffer)
   (when (buffer-forward-selection buffer)
     (push (car (buffer-forward-selection buffer))
@@ -623,9 +629,11 @@
     (setf (buffer-forward-selection buffer)
           (cdr (buffer-forward-selection buffer)))))
 
+;; TODO: this function does not appear to be called anywhere and involves BUFFER-FORWARD-SELECTION,
+;;  which is undefined and I do not see it defined historically.
 (defun add-new-selection (element-list buffer)
   (dolist (selection (buffer-forward-selection buffer)
-           (push element-list (buffer-back-selection buffer)))
+		     (push element-list (buffer-back-selection buffer)))
     (push selection (buffer-back-selection buffer))))
 
 (defun set-buffer-of-staves (buffer)

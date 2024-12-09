@@ -198,12 +198,12 @@ notehead, dots and beams values."
       0))
 
 (defun parse-mxml-note-staff (note staves)
-"Given an xml note element and a list of all the staff objects, return
+  "Given an xml note element and a list of all the staff objects, return
 the staff object the note is supposed to be assigned to. If none is
 specified, returns the first (hopefully default) staff."
-(let ((melody-staves
-       (remove-if #'(lambda (s) (not (typep s 'fiveline-staff))) staves)))
-  (elt melody-staves (parse-mxml-note-staff-number note))))
+  (let ((melody-staves
+	  (remove-if #'(lambda (s) (not (typep s 'fiveline-staff))) staves)))
+    (elt melody-staves (parse-mxml-note-staff-number note))))
 
 (defvar *parsing-in-cluster*)
 

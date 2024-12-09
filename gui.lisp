@@ -1,5 +1,6 @@
 (cl:in-package #:gsharp)
 
+;; TODO, come on, David seriously harding values here ;)
 (defparameter *icon-path*
   ;;  sb-ext:*core-pathname*
   "/Users/dlewis/lisp/gsharp/Icons/")
@@ -46,7 +47,7 @@
       (complete-input stream
                       (lambda (so-far action)
                         (complete-from-possibilities
-                         so-far (views *esa-instance*) '()
+                         so-far (views *esa-instance*) '() ; looks like a Drei accessor.
                          :action action
                          :name-key #'princ-to-string
                          :value-key #'identity))
@@ -118,7 +119,8 @@
   ((views :initarg :views :initform '() :accessor views)
    (input-state :initarg :input-state :accessor input-state))
   (:default-initargs :input-state (make-input-state))
-  (:menu-bar menubar-command-table :height 25)
+  ;(:menu-bar menubar-command-table :height 25)
+  (:menu-bar menubar-command-table)
   (:pointer-documentation t)
   (:panes
    (score (let* ((win (make-pane 'gsharp-pane
@@ -1078,6 +1080,7 @@ Prints the results in the minibuffer."
       (unless *current-note*
         (com-erase-element 1)))))
 
+;; TODO warning about state never being used!!
 (defun insert-keysig ()
   (let* ((state (input-state *application-frame*))
          (cursor (current-cursor))
